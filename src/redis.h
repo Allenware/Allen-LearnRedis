@@ -695,7 +695,8 @@ struct saveparam
 };
 
 // 通过复用来减少内存碎片，以及减少操作耗时的共享对象
-struct sharedObjectsStruct {
+struct sharedObjectsStruct 
+{
     robj *crlf, *ok, *err, *emptybulk, *czero, *cone, *cnegone, *pong, *space,
     *colon, *nullbulk, *nullmultibulk, *queued,
     *emptymultibulk, *wrongtypeerr, *nokeyerr, *syntaxerr, *sameobjecterr,

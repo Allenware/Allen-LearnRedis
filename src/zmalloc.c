@@ -109,7 +109,8 @@ static size_t used_memory = 0;
 static int zmalloc_thread_safe = 0;
 pthread_mutex_t used_memory_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static void zmalloc_default_oom(size_t size) {
+static void zmalloc_default_oom(size_t size) 
+{
     fprintf(stderr, "zmalloc: Out of memory trying to allocate %zu bytes\n",
         size);
     fflush(stderr);
@@ -209,7 +210,8 @@ void zfree(void *ptr) {
 #endif
 }
 
-char *zstrdup(const char *s) {
+char *zstrdup(const char *s) 
+{
     size_t l = strlen(s)+1;
     char *p = zmalloc(l);
 

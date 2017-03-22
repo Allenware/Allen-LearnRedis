@@ -402,6 +402,7 @@ void redisLog(int level, const char *fmt, ...)
     if ((level&0xff) < server.verbosity)
 		return;
 
+	/* 将参数全部写入msg中 */
     va_start(ap, fmt);
     vsnprintf(msg, sizeof(msg), fmt, ap);
     va_end(ap);
@@ -421,6 +422,7 @@ void redisLogFromHandler(int level, const char *msg)
     int log_to_stdout = server.logfile[0] == '\0';
     char buf[64];
 
+	/* 日志级别不够，或者后台进程向stdout输出 */
     if ((level&0xff) < server.verbosity || (log_to_stdout && server.daemonize))
         return;
 	
@@ -429,9 +431,11 @@ void redisLogFromHandler(int level, const char *msg)
 						 
     if (fd == -1) 
 		return;
-	
+
+	/* pid->string */
     ll2string(buf,sizeof(buf),getpid());
-	
+
+	/* [pid | signal handler] (12723139813) Received SIGTERM, scheduling shutdown... */
     if (write(fd,"[",1) == -1) goto err;
 	
     if (write(fd,buf,strlen(buf)) == -1) goto err;
@@ -1406,7 +1410,6 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData)
     // 服务器进程收到 SIGTERM 信号，关闭服务器
     if (server.shutdown_asap) 
 	{
-
         // 尝试关闭服务器
         if (prepareForShutdown(0) == REDIS_OK) exit(0);
 
@@ -2128,15 +2131,16 @@ void resetServerStats(void) {
     server.ops_sec_last_sample_ops = 0;
 }
 
-void initServer() {
+void initServer() 
+{
     int j;
 
-    // 设置信号处理函数
+    /* 处理信号 */
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
     setupSignalHandlers();
 
-    // 设置 syslog
+    /* 设置 syslog */
     if (server.syslog_enabled) 
 	{
         openlog(server.syslog_ident, LOG_PID | LOG_NDELAY | LOG_NOWAIT,
@@ -2877,23 +2881,29 @@ int processCommand(redisClient *c) {
 /* Close listening sockets. Also unlink the unix domain socket if
  * unlink_unix_socket is non-zero. */
 // 关闭监听套接字
-void closeListeningSockets(int unlink_unix_socket) {
+void closeListeningSockets(int unlink_unix_socket)
+{
     int j;
 
-    for (j = 0; j < server.ipfd_count; j++) close(server.ipfd[j]);
+    for (j = 0; j < server.ipfd_count; j++)
+		close(server.ipfd[j]);
 
-    if (server.sofd != -1) close(server.sofd);
+    if (server.sofd != -1) 
+		close(server.sofd);
 
     if (server.cluster_enabled)
-        for (j = 0; j < server.cfd_count; j++) close(server.cfd[j]);
+        for (j = 0; j < server.cfd_count; j++) 
+			close(server.cfd[j]);
 
-    if (unlink_unix_socket && server.unixsocket) {
+    if (unlink_unix_socket && server.unixsocket)
+	{
         redisLog(REDIS_NOTICE,"Removing the unix socket file.");
-        unlink(server.unixsocket); /* don't care if this fails */
+        unlink(server.unixsocket); 		/* don't care if this fails */
     }
 }
 
-int prepareForShutdown(int flags) {
+int prepareForShutdown(int flags)
+{
     int save = flags & REDIS_SHUTDOWN_SAVE;
     int nosave = flags & REDIS_SHUTDOWN_NOSAVE;
 
@@ -2903,22 +2913,27 @@ int prepareForShutdown(int flags) {
        We want to avoid race conditions, for instance our saving child may
        overwrite the synchronous saving did by SHUTDOWN. */
     // 如果有 BGSAVE 正在执行，那么杀死子进程，避免竞争条件
-    if (server.rdb_child_pid != -1) {
+    if (server.rdb_child_pid != -1) 
+	{
         redisLog(REDIS_WARNING,"There is a child saving an .rdb. Killing it!");
         kill(server.rdb_child_pid,SIGUSR1);
         rdbRemoveTempFile(server.rdb_child_pid);
     }
 
     // 同理，杀死正在执行 BGREWRITEAOF 的子进程
-    if (server.aof_state != REDIS_AOF_OFF) {
+    if (server.aof_state != REDIS_AOF_OFF) 
+	{
         /* Kill the AOF saving child as the AOF we already have may be longer
          * but contains the full dataset anyway. */
-        if (server.aof_child_pid != -1) {
+        if (server.aof_child_pid != -1)
+		{
             redisLog(REDIS_WARNING,
                 "There is a child rewriting the AOF. Killing it!");
             kill(server.aof_child_pid,SIGUSR1);
         }
+		
         /* Append only file: fsync() the AOF and exit */
+		
         redisLog(REDIS_NOTICE,"Calling fsync() on the AOF file.");
         // 将缓冲区的内容写入到硬盘里面
         aof_fsync(server.aof_fd);
@@ -2941,7 +2956,8 @@ int prepareForShutdown(int flags) {
     }
 
     // 移除 pidfile 文件
-    if (server.daemonize) {
+    if (server.daemonize)
+	{
         redisLog(REDIS_NOTICE,"Removing the pid file.");
         unlink(server.pidfile);
     }
@@ -3882,7 +3898,8 @@ void createPidFile(void)
     }
 }
 
-void daemonize(void) {
+void daemonize(void) 
+{
     int fd;
 
     if (fork() != 0) 
@@ -3898,6 +3915,7 @@ void daemonize(void) {
         dup2(fd, STDIN_FILENO);
         dup2(fd, STDOUT_FILENO);
         dup2(fd, STDERR_FILENO);
+		
         if (fd > STDERR_FILENO) 
 			close(fd);
     }
@@ -3961,7 +3979,7 @@ static void sigtermHandler(int sig)
 
     redisLogFromHandler(REDIS_WARNING,"Received SIGTERM, scheduling shutdown...");
     
-    // 打开关闭标识
+    /* 关闭服务器 */
     server.shutdown_asap = 1;
 }
 
@@ -3976,7 +3994,7 @@ void setupSignalHandlers(void)
     act.sa_handler = sigtermHandler;
     sigaction(SIGTERM, &act, NULL);
 
-#ifdef HAVE_BACKTRACE
+#ifdef HAVE_BACKTRACE //linux、max平台
     sigemptyset(&act.sa_mask);
     act.sa_flags = SA_NODEFER | SA_RESETHAND | SA_SIGINFO;
     act.sa_sigaction = sigsegvHandler;

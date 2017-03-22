@@ -1146,10 +1146,13 @@ int rdbSaveBackground(char *filename) {
  *
  * BGSAVE 执行被中断时使用
  */
-void rdbRemoveTempFile(pid_t childpid) {
+void rdbRemoveTempFile(pid_t childpid) 
+{
     char tmpfile[256];
 
     snprintf(tmpfile,256,"temp-%d.rdb", (int) childpid);
+
+	/* 减少temp-pid.rdb的连接数 */
     unlink(tmpfile);
 }
 

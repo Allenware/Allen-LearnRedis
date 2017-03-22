@@ -91,7 +91,8 @@ robj *createEmbeddedStringObject(char *ptr, size_t len) {
  * The current limit of 39 is chosen so that the biggest string object
  * we allocate as EMBSTR will still fit into the 64 byte arena of jemalloc. */
 #define REDIS_ENCODING_EMBSTR_SIZE_LIMIT 39
-robj *createStringObject(char *ptr, size_t len) {
+robj *createStringObject(char *ptr, size_t len)
+{
     if (len <= REDIS_ENCODING_EMBSTR_SIZE_LIMIT)
         return createEmbeddedStringObject(ptr,len);
     else
