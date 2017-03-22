@@ -25,7 +25,8 @@ deps/lua/src/liblua.a
 .make-*
 .prerequisites
 *.dSYM
-
+y
+y.pub
 # Prerequisites
 *.d
 
