@@ -89,8 +89,8 @@ typedef void aeBeforeSleepProc(struct aeEventLoop *eventLoop);
  *
  * 文件事件结构
  */
-typedef struct aeFileEvent {
-
+typedef struct aeFileEvent 
+{
     // 监听事件类型掩码，
     // 值可以是 AE_READABLE 或 AE_WRITABLE ，
     // 或者 AE_READABLE | AE_WRITABLE
@@ -111,8 +111,8 @@ typedef struct aeFileEvent {
  *
  * 时间事件结构
  */
-typedef struct aeTimeEvent {
-
+typedef struct aeTimeEvent
+{
     // 时间事件的唯一标识符
     long long id; /* time event identifier. */
 
@@ -138,7 +138,8 @@ typedef struct aeTimeEvent {
  *
  * 已就绪事件
  */
-typedef struct aeFiredEvent {
+typedef struct aeFiredEvent 
+{
 
     // 已就绪文件描述符
     int fd;
@@ -154,7 +155,8 @@ typedef struct aeFiredEvent {
  *
  * 事件处理器的状态
  */
-typedef struct aeEventLoop {
+typedef struct aeEventLoop 
+{
 
     // 目前已注册的最大描述符
     int maxfd;   /* highest file descriptor currently registered */
@@ -185,7 +187,6 @@ typedef struct aeEventLoop {
 
     // 在处理事件前要执行的函数
     aeBeforeSleepProc *beforesleep;
-
 } aeEventLoop;
 
 /* Prototypes */

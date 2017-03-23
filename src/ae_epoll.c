@@ -34,8 +34,8 @@
 /*
  * 事件状态
  */
-typedef struct aeApiState {
-
+typedef struct aeApiState 
+{
     // epoll_event 实例描述符
     int epfd;
 

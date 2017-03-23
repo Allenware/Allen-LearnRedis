@@ -1620,7 +1620,8 @@ void beforeSleep(struct aeEventLoop *eventLoop)
 
     /* Send all the slaves an ACK request if at least one client blocked
      * during the previous event loop iteration. */
-    if (server.get_ack_from_slaves) {
+    if (server.get_ack_from_slaves)
+	{
         robj *argv[3];
 
         argv[0] = createStringObject("REPLCONF",8);
@@ -1955,7 +1956,8 @@ void adjustOpenFilesLimit(void)
     } 
 	else
 	{
-        rlim_t oldlimit = limit.rlim_cur;	//当前的软限制
+		/* 当前的软限制 */
+        rlim_t oldlimit = limit.rlim_cur;	
 
         /* Set the max number of files if the current limit is not enough
          * for our needs. */
@@ -1976,23 +1978,31 @@ void adjustOpenFilesLimit(void)
 				
                 if (setrlimit(RLIMIT_NOFILE,&limit) != -1) 
 					break;
+
+				/* 保留系统的错误码提示 */
                 setrlimit_error = errno;
 
                 /* We failed to set file limit to 'f'. Try with a
-                 * smaller limit decrementing by a few FDs per iteration. */
+                 * smaller limit decrementing by a few FDs per iteration. 
+				 * 找到相对合适的limit
+                 */
                 if (f < decr_step) 
 					break;
                 f -= decr_step;
             }
 
             /* Assume that the limit we get initially is still valid if
-             * our last try was even lower. */
+             * our last try was even lower. 
+			 * 低于软限制，取软限制
+             */
             if (f < oldlimit) 
 				f = oldlimit;
 
             if (f != maxfiles) 
 			{
                 int old_maxclients = server.maxclients;
+
+				/* 能打开的文件数不能低于32个 */
                 server.maxclients = f - REDIS_MIN_RESERVED_FDS;
                 if (server.maxclients < 1) 
 				{
